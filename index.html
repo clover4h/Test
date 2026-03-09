@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clover by 4H | Satellite AR Portal</title>
+
+    <style>
+        :root {
+            --primary-green: #2d7a5e;
+            --white: #ffffff;
+            --gold: #ffbf47;
+            --error-red: #ff4757;
+            --dark-bg: #1a1a1a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: sans-serif;
+            background-color: var(--primary-green);
+            color: var(--white);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            height: 70px;
+            background: var(--white);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo img { height: 45px; width: auto; display: block; }
+
+        main { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+
+        #webgl-status-bar {
+            padding: 8px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .content-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .iframe-container {
+            width: 100%;
+            background: #000;
+            border-radius: 15px;
+            border: 5px solid var(--white);
+            aspect-ratio: 16 / 9;
+            min-height: 400px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #satellite-iframe { width: 100%; height: 100%; border: none; }
+
+        /* --- THE VISUAL FIX GUIDE --- */
+        #webgl-error-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark-bg);
+            display: none; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 100; text-align: center; padding: 30px;
+            overflow-y: auto;
+        }
+
+        .guide-container { max-width: 600px; }
+        .guide-container h2 { color: var(--gold); margin-bottom: 10px; }
+        
+        .browser-steps {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .step-card {
+            background: #333;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+        }
+
+        .step-card strong { color: var(--gold); display: block; margin-bottom: 5px; }
+        
+        .btn-retry {
+            background: var(--gold); color: black;
+            padding: 12px 25px; border-radius: 20px;
+            border: none; font-weight: bold; cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .browser-steps { grid-template-columns: 1fr; }
+            .iframe-container { aspect-ratio: 4 / 5; min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtgRCyHSqGN5LsJ2ROji_XP86RBg0xIT2S_Q&s" alt="Logo">
+        </div>
+    </header>
+
+    <main>
+        <div id="webgl-status-bar">Checking Graphics...</div>
+
+        <div class="content-card">
+            <div id="webgl-error-overlay">
+                <div class="guide-container">
+                    <h2>Oops! Graphics are Disabled</h2>
+                    <p>This game needs "WebGL" to run. Follow the quick steps for your browser below:</p>
+                    
+                    <div class="browser-steps">
+                        <div class="step-card">
+                            <strong>Chrome / Edge</strong>
+                            1. Click the 3 dots (⋮) top right.<br>
+                            2. Go to <b>Settings</b> > <b>System</b>.<br>
+                            3. Turn ON <b>"Hardware Acceleration"</b>.<br>
+                            4. Click Relaunch.
+                        </div>
+                        <div class="step-card">
+                            <strong>Safari (Mac)</strong>
+                            1. Click <b>Safari</b> > <b>Settings</b>.<br>
+                            2. Go to <b>Advanced</b>.<br>
+                            3. Check <b>"Show Develop menu"</b>.<br>
+                            4. In <b>Develop</b> menu, check <b>WebGL</b>.
+                        </div>
+                    </div>
+
+                    <button class="btn-retry" onclick="location.reload()">I've enabled it, let's play!</button>
+                </div>
+            </div>
+
+            <h1>Tessellation Studio</h1>
+            <div class="iframe-container">
+                <iframe id="satellite-iframe" src="https://www.4-h.org/wp-content/uploads/tess-studio/index.html"></iframe>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function checkWebGL() {
+            const canvas = document.createElement('canvas');
+            const gl2 = canvas.getContext('webgl2');
+            const gl1 = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            
+            const statusBar = document.getElementById('webgl-status-bar');
+            const errorOverlay = document.getElementById('webgl-error-overlay');
+
+            if (gl2) {
+                statusBar.innerHTML = "✅ Graphics: WebGL 2.0 (Active)";
+            } else if (gl1) {
+                statusBar.innerHTML = "⚠️ Graphics: WebGL 1.0 (Active)";
+            } else {
+                statusBar.innerHTML = "❌ Graphics: Disabled";
+                statusBar.style.color = "var(--error-red)";
+                errorOverlay.style.display = "flex";
+            }
+        }
+        window.addEventListener('load', checkWebGL);
+    </script>
+</body>
+</html>
